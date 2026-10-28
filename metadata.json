@@ -1,0 +1,6 @@
+{
+  "name": "OOPsMate AI — Your Personal C++ OOP Tutor",
+  "description": "AI-powered C++ and Object-Oriented Programming tutor for B.Tech Computer Engineering students, featuring interactive learning modes, code lab, quiz arena, and viva practice.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
