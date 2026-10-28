@@ -213,7 +213,8 @@ export default function App() {
     const assistantId = `assistant_${Date.now()}`;
 
     try {
-      const response = await fetch("/api/chat", {
+      const endpoint = mode === "code" ? "/api/code" : "/api/chat";
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

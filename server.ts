@@ -322,6 +322,63 @@ Return a JSON object with:
   }
 });
 
+// Dedicated Code Generation & Code Lab Endpoint
+app.post(["/api/code", "/api/code/generate"], async (req, res) => {
+  try {
+    if (!ai) {
+      return res.status(500).json({ error: "Gemini API key is not configured." });
+    }
+
+    const { messages, prompt, code, topic, mode = "code" } = req.body;
+
+    let contents: any[] = [];
+    if (messages && Array.isArray(messages) && messages.length > 0) {
+      contents = messages.slice(-10).map((msg: { role: string; content: string }) => ({
+        role: msg.role === "assistant" || msg.role === "model" ? "model" : "user",
+        parts: [{ text: msg.content }],
+      }));
+    } else {
+      const userText =
+        prompt ||
+        code ||
+        "Generate a complete, modern C++ OOP program demonstrating classes, objects, and core OOP principles.";
+      contents = [{ role: "user", parts: [{ text: userText }] }];
+    }
+
+    const systemInstruction = `You are OOPsMate AI — Your Personal C++ OOP Tutor specializing in modern C++ code generation.
+Requirements:
+1. Generate complete, compilable, production-ready C++ (C++17/C++20) programs inside \`\`\`cpp code blocks.
+2. Provide line-by-line engineering explanations of critical object-oriented patterns.
+3. Include an Expected Terminal Output block.
+4. Highlight common university exam pitfalls and runtime hazards (e.g. object slicing, memory leaks, vtable dynamic binding).
+Topic context: ${topic || "C++ Object-Oriented Programming"}`;
+
+    for (const model of MODEL_CANDIDATES) {
+      try {
+        const response = await withRetry(() =>
+          ai.models.generateContent({
+            model,
+            contents,
+            config: {
+              systemInstruction,
+            },
+          })
+        );
+
+        const text = response.text || "";
+        return res.json({ text });
+      } catch (err: any) {
+        console.warn(`Code generation with ${model} failed, trying next...`, err.message);
+      }
+    }
+
+    throw new Error("Code generation service is temporarily busy. Please retry.");
+  } catch (error: any) {
+    console.error("Code endpoint error:", error);
+    return res.status(500).json({ error: error.message || "Failed to process code request." });
+  }
+});
+
 // Mount Vite or serve static files
 async function startServer() {
   const isDev = process.env.NODE_ENV !== "production";
@@ -347,3 +404,6 @@ async function startServer() {
 }
 
 startServer();
+
+export default app;
+export { app };
